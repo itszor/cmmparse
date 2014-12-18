@@ -55,7 +55,7 @@ $(TARGET): $(OCAMLOBJ)
 
 parser.ml: cmm.cmo
 lexer.ml: cmm.cmo parser.cmo
-parser.cmo: cmm.cmo
+parser.cmo: cmm.cmo parser.cmi
 lexer.cmo: cmm.cmo parser.cmo
 
 parser.cmi: parser.mli
