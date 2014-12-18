@@ -4,6 +4,30 @@ open Cmm
 
 exception Parse_error
 
+let tag_of_num = function
+    0 -> Untagged
+  | 246 -> Tag_lazy
+  | 247 -> Tag_closure
+  | 248 -> Tag_object
+  | 249 -> Tag_infix
+  | 250 -> Tag_forward
+  | 251 -> Tag_abstract
+  | 252 -> Tag_string
+  | 253 -> Tag_double
+  | 254 -> Tag_double_array
+  | 255 -> Tag_custom
+  | 1000 -> Tag_int
+  | 1001 -> Tag_out_of_heap
+  | 1002 -> Tag_unaligned
+  | x -> Tag_other x
+
+let detag = function
+    Int_const i ->
+      let sz = Int64.shift_right_logical i 10
+      and tag = tag_of_num (Int64.to_int (Int64.logand i 0x3ffL)) in
+      Block_header (tag, sz)
+  | x -> x
+
 %}
 
 %token <Cmm.machtype> MACHTYPE
@@ -94,7 +118,11 @@ arg: n = name COLON m = machtype	{ n, m }
 ;
 
 expr: OPENPAREN o = OPER el = list(expr) CLOSEPAREN
-					{ Op (o, el) }
+					{ match o, el with
+					  Alloc, hdr::lst ->
+					    Op (o, (detag hdr)::lst)
+					| _ ->
+					    Op (o, el) }
     | i = INT				{ Int_const i }
     | f = FLOAT				{ Float_const f }
     | p = PTR_CONST			{ Pointer_const p }

@@ -22,6 +22,22 @@ type scalar = Uint8
 
 type raise_kind = Raise | Reraise | Raise_notrace
 
+type blk_tag = Untagged
+             | Tag_lazy
+	     | Tag_closure
+	     | Tag_object
+	     | Tag_infix
+	     | Tag_forward
+	     | Tag_abstract
+	     | Tag_string
+	     | Tag_double
+	     | Tag_double_array
+	     | Tag_custom
+	     | Tag_int
+	     | Tag_out_of_heap
+	     | Tag_unaligned
+	     | Tag_other of int
+
 type oper = Apply
           | Extcall
 	  | Load of scalar
@@ -59,6 +75,7 @@ type expr = Int_const of int64
 	  | Float_const of float
 	  | Sym_const of string
 	  | Pointer_const of int64
+	  | Block_header of blk_tag * int64
 	  | Var of string
 	  | Let of string * expr * expr
 	  | Assign of string * expr
