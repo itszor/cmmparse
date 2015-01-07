@@ -12,7 +12,7 @@ PREFIX = /usr/local
 COBJ = 
 
 # Source plus generated files.
-OCAMLSRC := cmm.ml parser.ml lexer.ml cmmparse.ml
+OCAMLSRC := cmm.ml parser.ml lexer.ml cmmparse.ml emit.ml
 
 OCAMLOBJ := $(shell < .depend $(OCAMLDSORT) -byte $(OCAMLSRC))
 

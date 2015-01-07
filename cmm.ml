@@ -22,7 +22,7 @@ type scalar = Uint8
 
 type raise_kind = Raise | Reraise | Raise_notrace
 
-type blk_tag = Untagged
+type blk_tag = Tag_tsa
              | Tag_lazy
 	     | Tag_closure
 	     | Tag_object
@@ -36,7 +36,9 @@ type blk_tag = Untagged
 	     | Tag_int
 	     | Tag_out_of_heap
 	     | Tag_unaligned
-	     | Tag_other of int
+	     | Tag_variant of int
+
+type colour = White | Grey | Blue | Black
 
 type oper = Apply
           | Extcall
@@ -68,7 +70,7 @@ type oper = Apply
 	  | Ftoi
 	  | Itof
 	  | Fcmp of cmp
-	  | Raise of raise_kind * string
+	  | Raise of raise_kind
 	  | Checkbound
 	  
 type expr = Int_const of int64
@@ -92,6 +94,7 @@ type expr = Int_const of int64
 type datum = Define_symbol of string
            | Define_label of int
 	   | Global_symbol of string
+	   | Data_header of blk_tag * colour * int64
 	   | Int8_lit of int
 	   | Int16_lit of int
 	   | Int32_lit of int32

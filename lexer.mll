@@ -14,14 +14,16 @@
   | _ -> failwith "Not a comparison"
 }
 
-let num = ['0'-'9']+
+let digit = ['0'-'9']
+let num = digit+
 let snum = num | '-' num
 let flnum = snum '.' | snum '.' num | snum 'e' snum | snum '.' num 'e' snum
 let hexdigit = ['0'-'9'] | ['a'-'f'] | ['A'-'F']
 let comparison = "==" | "!=" | "<" | "<=" | ">" | ">="
 let asc = ['a'-'z'] | ['A'-'Z'] | '_'
-let label = asc ( asc | num | '/' )*
-let noquote = [^'"']
+let label = asc ( asc | digit | '/' )*
+let noquote = [^ '"' '\\'] | '\\' '"' | "\\\\" | "\\n" | "\\r" | "\\t" | "\\b"
+	      | '\\' digit digit digit
 
 rule token = parse
     "float"			{ MACHTYPE Float }
@@ -70,7 +72,7 @@ rule token = parse
   | "checkbound"		{ OPER Checkbound }
   | snum as snum		{ INT (Int64.of_string snum) }
   | flnum as flnum		{ FLOAT (float_of_string flnum) }
-  | '"' (noquote* as str) '"'	{ STRING str }
+  | '"' (noquote* as str) '"'	{ STRING (Scanf.unescaped str) }
   | (snum as snum) 'a'		{ PTR_CONST (Int64.of_string snum) }
   | '('				{ OPENPAREN }
   | ')'				{ CLOSEPAREN }

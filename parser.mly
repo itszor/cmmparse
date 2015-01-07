@@ -4,8 +4,15 @@ open Cmm
 
 exception Parse_error
 
+let colour_of_num = function
+    0 -> White
+  | 1 -> Grey
+  | 2 -> Blue
+  | 3 -> Black
+  | _ -> failwith "Not a colour"
+
 let tag_of_num = function
-    0 -> Untagged
+    0 -> Tag_tsa
   | 246 -> Tag_lazy
   | 247 -> Tag_closure
   | 248 -> Tag_object
@@ -16,24 +23,61 @@ let tag_of_num = function
   | 253 -> Tag_double
   | 254 -> Tag_double_array
   | 255 -> Tag_custom
-  | 1000 -> Tag_int
-  | 1001 -> Tag_out_of_heap
-  | 1002 -> Tag_unaligned
-  | x -> Tag_other x
+  | x -> Tag_variant x
 
 let detag = function
     Int_const i ->
       let sz = Int64.shift_right_logical i 10
-      and tag = tag_of_num (Int64.to_int (Int64.logand i 0x3ffL)) in
+      and tag = tag_of_num (Int64.to_int (Int64.logand i 0xffL)) in
       Block_header (tag, sz)
   | x -> x
+
+let count_data dlist =
+  let rec scan amt = function
+    [] -> amt
+  | (Define_symbol _ | Define_label _ | Global_symbol _) :: rest ->
+      scan amt rest
+  | Int8_lit _ :: rest -> scan (1 + amt) rest
+  | Int16_lit _ :: rest -> scan (2 + amt) rest
+  | Int32_lit _ :: rest -> scan (4 + amt) rest
+  | Int_lit _ :: rest -> scan (8 + amt) rest
+  | Float_lit _ :: rest -> scan (8 + amt) rest
+  | Double_lit _ :: rest -> scan (8 + amt) rest
+  | Symbol_address _ :: rest -> scan (8 + amt) rest
+  | Label_address _ :: rest -> scan (8 + amt) rest
+  | String_lit s :: rest -> scan (String.length s + amt) rest
+  | Data_header _ :: rest -> scan (8 + amt) rest
+  | Skip i :: rest -> scan (i + amt) rest
+  | Align i :: rest ->
+      let mask = lnot (i - 1) in
+      scan ((amt + i - 1) land mask) rest in
+  scan 0 dlist
+
+let detag_data dlist =
+  let check header_size data =
+    let size_bytes = count_data data in
+    let size_words = (size_bytes + 7) / 8 in
+    size_words = header_size in
+  let rec scan = function
+    [] -> []
+  | Int_lit il :: rest ->
+      let sz = Int64.shift_right_logical il 10
+      and tag = tag_of_num (Int64.to_int (Int64.logand il 0xffL))
+      and colour = colour_of_num (Int64.to_int
+		     (Int64.logand (Int64.shift_right_logical il 8) 3L)) in
+      if check (Int64.to_int sz) rest then
+	Data_header (tag, colour, sz) :: rest
+      else
+        Int_lit il :: rest
+  | (Global_symbol _ as gs) :: rest -> gs :: scan rest
+  | x -> x in
+  scan dlist
 
 %}
 
 %token <Cmm.machtype> MACHTYPE
 %token <Cmm.scalar> SCALAR
 %token <Cmm.oper> OPER
-%token <Cmm.datum> DATUM
 %token <Cmm.raise_kind> RAISE
 %token <string> STRING VARNAME
 %token <int64> INT PTR_CONST
@@ -50,7 +94,7 @@ let detag = function
 %%
 
 toplevel: EOF				{ [] }
-	| d = datablock ts = toplevel	{ Data d :: ts }
+	| d = datablock ts = toplevel	{ Data (detag_data d) :: ts }
 	| f = fnblock ts = toplevel	{ Function f :: ts }
 	| error				{ raise Parse_error }
 ;
@@ -83,17 +127,12 @@ fnblock: OPENPAREN FUNCTION n = name OPENPAREN args = list(arg) CLOSEPAREN
 ;
 
 name: l = LABEL				{ "L" ^ (string_of_int l) }
-    | LET				{ "let" }
     | ASSIGN				{ "assign" }
     | SEQ				{ "seq" }
-    | IF				{ "if" }
     | SWITCH				{ "switch" }
     | LOOP				{ "loop" }
     | CATCH				{ "catch" }
-    | TRY				{ "try" }
-    | WITH				{ "with" }
     | EXIT				{ "exit" }
-    | FUNCTION				{ "function" }
     | DATA				{ "data" }
     | GLOBAL				{ "global" }
     | BYTE				{ "byte" }
@@ -103,7 +142,6 @@ name: l = LABEL				{ "L" ^ (string_of_int l) }
     | SINGLE				{ "single" }
     | DOUBLE				{ "double" }
     | ADDR				{ "addr" }
-    | STRINGLIT				{ "string" }
     | SKIP				{ "skip" }
     | ALIGN				{ "align" }
     | v = VARNAME			{ v }
@@ -149,6 +187,10 @@ expr: OPENPAREN o = OPER el = list(expr) CLOSEPAREN
 					  | (n, b) :: rest ->
 					      Let (n, b, lets rest) in
 					  lets bs }
+    | OPENPAREN TRY e1 = expr_seq WITH n = name e2 = expr_seq CLOSEPAREN
+					{ TryWith (e1, n, e2) }
+    | OPENPAREN r = RAISE el = list(expr) CLOSEPAREN
+					{ Op (Raise r, el) }
     | error				{ raise Parse_error }
 ;
 

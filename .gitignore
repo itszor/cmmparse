@@ -1,0 +1,8 @@
+*.cmi
+*.cmo
+.depend
+lexer.ml
+parser.ml
+parser.mli
+cmmparse
+*.conflicts
