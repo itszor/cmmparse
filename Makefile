@@ -1,4 +1,5 @@
 
+OCAMLFIND = ocamlfind
 OCAMLC = ocamlc -g
 OCAMLLEX = ocamllex
 OCAMLYACC = ocamlyacc -v
@@ -8,6 +9,7 @@ OCAMLDEP = ocamldep
 OCAMLDSORT = ocamldsort
 INSTALL = install
 PREFIX = /usr/local
+PACKAGES = -package bytes
 
 COBJ = 
 
@@ -35,17 +37,17 @@ ML_ERROR:
 
 # core compiler
 $(TARGET): $(OCAMLOBJ)
-	$(OCAMLC) $(OCAMLOBJ) -o $@
+	$(OCAMLFIND) $(OCAMLC) $(PACKAGES) -linkpkg $(OCAMLOBJ) -o $@
 
 # Also include (lex, yacc) generated files here.
 .depend:	$(OCAMLSRC)
 	$(OCAMLDEP) $(OCAMLSRC) > .depend
 
 %.cmo: %.ml
-	$(OCAMLC) $< -c -o $@
+	$(OCAMLFIND) $(OCAMLC) $(PACKAGES) $< -c -o $@
 
 %.cmi: %.mli
-	$(OCAMLC) $< -c -o $@
+	$(OCAMLFIND) $(OCAMLC) $(PACKAGES) $< -c -o $@
 
 %.ml: %.mly
 	$(MENHIR) --infer $<

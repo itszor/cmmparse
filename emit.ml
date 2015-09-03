@@ -115,9 +115,9 @@ let print_ctype_for_mt fh mt =
 
 let tuple_type_basename ttype =
   let arr = Array.of_list ttype in
-  String.init (Array.length arr)
-	      (fun i -> match arr.(i) with
-		Int -> 'i' | Float -> 'f' | Addr -> 'a')
+  Bytes.init (Array.length arr)
+	     (fun i -> match arr.(i) with
+	       Int -> 'i' | Float -> 'f' | Addr -> 'a')
 
 let tuple_type_name ttype =
   "tup_" ^ tuple_type_basename ttype
