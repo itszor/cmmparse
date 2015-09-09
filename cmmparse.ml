@@ -13,3 +13,6 @@ let parse fname =
     close_in ic;
     []
   end
+
+let _ =
+  parse Sys.argv.(1)

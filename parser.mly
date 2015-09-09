@@ -85,7 +85,7 @@ let detag_data dlist =
 %token <int> LABEL
 %token LOAD STORE OPENPAREN CLOSEPAREN LET ASSIGN SEQ IF SWITCH
 %token LOOP CATCH WITH EXIT TRY GLOBAL BYTE INT16 INT32 INTLIT SINGLE DOUBLE
-%token ADDR STRINGLIT SKIP ALIGN COLON
+%token ADDR VAL STRINGLIT SKIP ALIGN COLON
 %token FUNCTION DATA
 %token EOF
 
@@ -149,6 +149,7 @@ name: l = LABEL				{ "L" ^ (string_of_int l) }
 
 machtype: m = MACHTYPE			{ m }
 	| ADDR				{ Addr }
+	| VAL				{ Val }
 	| INTLIT			{ Int }
 ;
 
@@ -201,6 +202,7 @@ expr_seq: e1 = expr e2 = expr_seq	{ Sequence (e1, e2) }
         | e = expr			{ e }
 ;
 
-accsz: /* empty */			{ Word }
+accsz: /* empty */			{ Word_int }
+     | VAL				{ Word_val }
      | s = SCALAR			{ s }
 ;

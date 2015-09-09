@@ -1,4 +1,5 @@
 type machtype = Addr
+              | Val
               | Int
 	      | Float
 
@@ -15,7 +16,8 @@ type scalar = Uint8
 	    | Sint16
 	    | Uint32
 	    | Sint32
-	    | Word
+	    | Word_int
+	    | Word_val
 	    | Float
 	    | Double
 	    | Double_u

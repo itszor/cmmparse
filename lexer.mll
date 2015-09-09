@@ -97,6 +97,7 @@ rule token = parse
   | "single"			{ SINGLE }
   | "double"			{ DOUBLE }
   | "addr"			{ ADDR }
+  | "val"			{ VAL }
   | "string"			{ STRINGLIT }
   | "skip"			{ SKIP }
   | "align"			{ ALIGN }
