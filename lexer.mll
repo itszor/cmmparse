@@ -36,7 +36,7 @@ rule token = parse
   | "float32"			{ SCALAR Float }
   | "float64"			{ SCALAR Double }
   | "float64u"			{ SCALAR Double_u }
-  | "app"			{ OPER Apply }
+  | "app"			{ APPLY }
   | "extcall"			{ OPER Extcall }
   | "load"			{ LOAD }
   | "alloc"			{ OPER Alloc }

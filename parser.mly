@@ -83,7 +83,7 @@ let detag_data dlist =
 %token <int64> INT PTR_CONST
 %token <float> FLOAT
 %token <int> LABEL
-%token LOAD STORE OPENPAREN CLOSEPAREN LET ASSIGN SEQ IF SWITCH
+%token LOAD STORE OPENPAREN CLOSEPAREN LET ASSIGN SEQ IF SWITCH APPLY
 %token LOOP CATCH WITH EXIT TRY GLOBAL BYTE INT16 INT32 INTLIT SINGLE DOUBLE
 %token ADDR VAL STRINGLIT SKIP ALIGN COLON
 %token FUNCTION DATA
@@ -162,6 +162,8 @@ expr: OPENPAREN o = OPER el = list(expr) CLOSEPAREN
 					    Op (o, (detag hdr)::lst)
 					| _ ->
 					    Op (o, el) }
+    | OPENPAREN APPLY el = list(expr) m = accsz CLOSEPAREN
+					{ Op (Apply m, el) }
     | i = INT				{ Int_const i }
     | f = FLOAT				{ Float_const f }
     | p = PTR_CONST			{ Pointer_const p }

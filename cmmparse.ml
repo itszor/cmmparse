@@ -15,4 +15,5 @@ let parse fname =
   end
 
 let _ =
-  parse Sys.argv.(1)
+  let toplevel = parse Sys.argv.(1) in
+  Emit.emit_data stderr toplevel

@@ -42,7 +42,7 @@ type blk_tag = Tag_tsa
 
 type colour = White | Grey | Blue | Black
 
-type oper = Apply
+type oper = Apply of scalar
           | Extcall
 	  | Load of scalar
 	  | Alloc
